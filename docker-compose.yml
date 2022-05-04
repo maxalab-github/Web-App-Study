@@ -1,0 +1,34 @@
+version: '3.1'
+
+services:
+  nginx:
+    image: staticfloat/nginx-certbot
+    container_name: nginx
+    restart: always
+    environment:
+      CERTBOT_EMAIL: "maxalab@gmail.com"
+    volumes:
+      - ./conf.d:/etc/nginx/user.conf.d:ro
+      - ./certbot_extra_domains:/etc/certbot/extra_domains:ro  
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - my-network
+    depends_on:
+      - flask
+  flask:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: flask
+    command: gunicorn --bind 0.0.0.0:8000 --workers 4 "app:app"
+    volumes:
+      - ./:/var/www
+    networks:
+      my-network:
+        aliases:
+          - flask-app
+
+networks:
+  my-network:
